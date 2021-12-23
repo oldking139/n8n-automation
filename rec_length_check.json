@@ -1,0 +1,552 @@
+{
+  "name": "public-rec-length-check_George_V0.2",
+  "nodes": [
+    {
+      "parameters": {
+        "command": "=DEL /Q \"C:\\Users\\oldking139\\OneDrive - KAZAMI IDC A-SOUL-REC\\OneDrive - KAZAMI IDC/{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"RelativePath\"]}}\""
+      },
+      "name": "delete-flv-files",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        1017
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "subject": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Name\"]}}开播了！| {{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Title\"]}}",
+        "text": "=检测到开播： {{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Name\"]}}\n直播间标题：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Title\"]}}\n直播间地址：https://live.bilibili.com/{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"RoomId\"]}}\n开播时间：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventTimestamp\"]}}",
+        "options": {}
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        900,
+        277
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventType\"]}}",
+              "value2": "FileClosed"
+            }
+          ]
+        }
+      },
+      "name": "判断：文件写入结束",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        710,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "let totalGB = 0;\nlet totalMB = 0;\n\nfor (const item of items) {\n  totalGB = (item.json.filesize / 1024 / 1024 / 1024) .toFixed(3)\n}\nfor (const item of items) {\n  totalMB = (item.json.filesize / 1024 / 1024) .toFixed(2)\n}\nreturn [\n  {\n    json: {\n      totalGB,\n      totalMB\n    }\n  }\n]"
+      },
+      "name": "体积转换：GB/MB",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1090,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [],
+          "number": [
+            {
+              "name": "duration",
+              "value": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Duration\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "录播姬报告时长",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "let rec_hours = 0;\nlet rec_minutes = 0;\n\nfor (const item of items) {\n  rec_hours = (item.json.duration / 60 / 60 ) .toFixed(3)\n}\nfor (const item of items) {\n  rec_minutes = (item.json.duration / 60 ) .toFixed(2)\n}\nreturn [\n  {\n    json: {\n      rec_hours,\n      rec_minutes\n    }\n  }\n]"
+      },
+      "name": "时长转换：分钟/小时",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventType\"]}}",
+              "value2": "FileOpening"
+            }
+          ],
+          "boolean": []
+        },
+        "combineOperation": "any"
+      },
+      "name": "判断：开始写入",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        710,
+        277
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [],
+          "number": [
+            {
+              "name": "filesize",
+              "value": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileSize\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "录播姬报告体积",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        900,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"录播文件时长比对\"].json[\"diff\"]}}",
+              "operation": "largerEqual",
+              "value2": 30
+            },
+            {
+              "value1": "={{$node[\"录播文件时长比对\"].json[\"diff\"]}}",
+              "operation": "smallerEqual",
+              "value2": -30
+            }
+          ],
+          "string": []
+        },
+        "combineOperation": "any"
+      },
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        827
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "functionCode": "let ratio = 0;\nlet diff = 0;\n\nfor (const item of items) {\n  ratio = (item.json.real_time / item.json.rec_time ) .toFixed(3)\n}\nfor (const item of items) {\n  diff = (item.json.rec_time - item.json.real_time ) .toFixed(3)\n}\nreturn [\n  {\n    json: {\n      ratio,\n      diff\n    }\n  }\n]"
+      },
+      "name": "录播文件时长比对",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1710,
+        827
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "=✔ | {{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Name\"]}} 录制已结束 | {{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Title\"]}}",
+        "text": "=直播间：https://live.bilibili.com/{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"RoomId\"]}}\n文件名：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"RelativePath\"]}}\n\n录播姬回报：\n文件大小：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileSize\"]}} 比特\n等效体积：{{$node[\"体积转换：GB/MB\"].json[\"totalMB\"]}} MB | {{$node[\"体积转换：GB/MB\"].json[\"totalGB\"]}} GB\n报告时长：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Duration\"]}}秒\n等效时长：{{$node[\"时长转换：分钟/小时\"].json[\"rec_minutes\"]}} 分钟 | {{$node[\"时长转换：分钟/小时\"].json[\"rec_hours\"]}}小时\n\n写入时长(计算后)：{{$node[\"获取实际时长\"].json[\"real_rec_time\"]}}秒\n等效时长(计算后)：{{$node[\"时长转换：分钟/小时2\"].json[\"real_minutes\"]}} 分钟 | {{$node[\"时长转换：分钟/小时2\"].json[\"real_hours\"]}} 小时\n\n时长对比：\n实际写入时长/录播姬报告时长↓\nRATIO: {{$node[\"录播文件时长比对\"].json[\"ratio\"]}}\n实际写入与录播姬报告时长差↓\n{{$node[\"录播文件时长比对\"].json[\"diff\"]}}秒\n这些数据看起来没问题。FLV将在稍后自动删除。\n\n文件开始写入：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileOpenTime\"]}}\n文件结束写入：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileCloseTime\"]}}",
+        "options": {}
+      },
+      "name": "录播结束+文件正常",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        1017
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "1",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@staff.asoulfan.cn",
+        "toEmail": "kazami@kazami.tech",
+        "ccEmail": "knaifen@foxmail.com;Reona0001@reopeko.onmicrosoft.com",
+        "subject": "=❌文件可能异常!!!! | ASrec： {{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Name\"]}} 录制已结束 | {{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Title\"]}}",
+        "text": "= | ❌文件可能异常!!!! FLV 不会自动删除，请及时上机确认❌\n直播间：https://live.bilibili.com/{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"RoomId\"]}}\n文件名：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"RelativePath\"]}}\n\n录播姬回报：\n文件大小：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileSize\"]}} 比特\n等效体积：{{$node[\"体积转换：GB/MB\"].json[\"totalMB\"]}} MB | {{$node[\"体积转换：GB/MB\"].json[\"totalGB\"]}} GB\n报告时长：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Duration\"]}}秒\n等效时长：{{$node[\"时长转换：分钟/小时\"].json[\"rec_minutes\"]}} 分钟 | {{$node[\"时长转换：分钟/小时\"].json[\"rec_hours\"]}}小时\n\n写入时长(计算后)：{{$node[\"获取实际时长\"].json[\"real_rec_time\"]}}秒\n等效时长(计算后)：{{$node[\"时长转换：分钟/小时2\"].json[\"real_minutes\"]}} 分钟 | {{$node[\"时长转换：分钟/小时2\"].json[\"real_hours\"]}} 小时\n\nN8N 时长对比：\n实际写入时长/录播姬报告时长↓\nRATIO: {{$node[\"录播文件时长比对\"].json[\"ratio\"]}}\n实际写入与录播姬报告时长差↓\n{{$node[\"录播文件时长比对\"].json[\"diff\"]}}秒\n对比差距过大，请上机检查！\n\n文件开始写入：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileOpenTime\"]}}\n文件结束写入：{{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileCloseTime\"]}}",
+        "options": {}
+      },
+      "name": "录播结束+文件异常！！！",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        637
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "1",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "name": "Wait 3s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2350,
+        637
+      ],
+      "webhookId": "1dfd6d1d-119f-42c7-8711-309807908bbd"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "rec_time",
+              "value": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"Duration\"]}}"
+            },
+            {
+              "name": "real_time",
+              "value": "={{$node[\"获取实际时长\"].json[\"real_rec_time\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "获取比较对象",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1710,
+        637
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "start_time",
+              "value": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileOpenTime\"]}}"
+            },
+            {
+              "name": "end_time",
+              "value": "={{$node[\"Webhook-v2-请阅读settings！！！！\"].json[\"body\"][\"EventData\"][\"FileCloseTime\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "获取始末时间",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1710,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "clean_start",
+              "value": "={{$json[\"start_time\"].replace('+08:00','')}}"
+            },
+            {
+              "name": "clean_end",
+              "value": "={{$json[\"end_time\"].replace('+08:00','')}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "set-to-clean-format",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "let real_rec_time = 0;\n\nfor (const item of items) {\n real_rec_time = (Date.parse(item.json.clean_end) - Date.parse(item.json.clean_start) ) / 1000\n}\nreturn [\n  {\n    json: {\n      real_rec_time\n    }\n  }\n]"
+      },
+      "name": "获取实际时长",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "let real_hours = 0;\nlet real_minutes = 0;\n\nfor (const item of items) {\n  real_hours = (item.json.real_rec_time / 60 / 60 ) .toFixed(3)\n}\nfor (const item of items) {\n  real_minutes = (item.json.real_rec_time / 60 ) .toFixed(2)\n}\nreturn [\n  {\n    json: {\n      real_hours,\n      real_minutes\n    }\n  }\n]"
+      },
+      "name": "时长转换：分钟/小时2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        437
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bilirec-webhook-v2",
+        "options": {}
+      },
+      "name": "Webhook-v2-请阅读settings！！！！",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        510,
+        277
+      ],
+      "webhookId": "0b65106a-4762-4695-b2e6-7159e000aef7",
+      "notes": "Auto rec length check V0.2\n感谢使用基于bilirec webhook v2制作的自动化录播时长检测。\n\n本副本默认假设您属性n8n的所有操作。\n\n本节点可以删除，不过您需要保证所有if节点能够从您自己的webhook v2 监听节点获取数据。\n或者，您直接替换现有的webhook v2 监听节点，生产环境请将本节点的 production url 填入 bilirec，测试请填入 test url。\n\n邮件节点后接一个自动删除flv的节点，若需要请自行修改录播路径或自行删除。\n\n另：所有的邮件节点请填入自己的smtp 邮件发送服务器，收件人。\n或者，您可以自己搭建属于自己的通知系统。"
+    },
+    {
+      "parameters": {},
+      "name": "请阅读wehook v2",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        260,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "判断：文件写入结束": {
+      "main": [
+        [
+          {
+            "node": "录播姬报告体积",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "体积转换：GB/MB": {
+      "main": [
+        [
+          {
+            "node": "录播姬报告时长",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "录播姬报告时长": {
+      "main": [
+        [
+          {
+            "node": "时长转换：分钟/小时",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "时长转换：分钟/小时": {
+      "main": [
+        [
+          {
+            "node": "获取始末时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断：开始写入": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "录播姬报告体积": {
+      "main": [
+        [
+          {
+            "node": "体积转换：GB/MB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "录播结束+文件异常！！！",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "录播结束+文件正常",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "录播文件时长比对": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "录播结束+文件正常": {
+      "main": [
+        [
+          {
+            "node": "Wait 3s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3s": {
+      "main": [
+        [
+          {
+            "node": "delete-flv-files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取比较对象": {
+      "main": [
+        [
+          {
+            "node": "录播文件时长比对",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取始末时间": {
+      "main": [
+        [
+          {
+            "node": "set-to-clean-format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set-to-clean-format": {
+      "main": [
+        [
+          {
+            "node": "获取实际时长",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取实际时长": {
+      "main": [
+        [
+          {
+            "node": "时长转换：分钟/小时2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "时长转换：分钟/小时2": {
+      "main": [
+        [
+          {
+            "node": "获取比较对象",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook-v2-请阅读settings！！！！": {
+      "main": [
+        [
+          {
+            "node": "判断：开始写入",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "判断：文件写入结束",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": 4
+}
