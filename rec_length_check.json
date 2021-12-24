@@ -32,18 +32,6 @@
     },
     {
       "parameters": {
-        "command": "=streamlink --http-proxy \"socks5h://127.0.0.1:11223\" --hls-live-restart --stream-segment-threads 8 --stdout https://live.bilibili.com/{{$node[\"Webhook-v2-请读notes\"].json[\"body\"][\"EventData\"][\"RoomId\"]}} best | ffmpeg -i  pipe:0 -c:v h264_qsv -b:v 5.5M -maxrate 6.5M -bufsize 13M -acodec copy -f FLV \"rtmp://tokyo.restream.io/live/re_2630246_dbed5e4858432f866797\""
-      },
-      "name": "start restream with QSV",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
-      "position": [
-        1090,
-        280
-      ]
-    },
-    {
-      "parameters": {
         "conditions": {
           "string": [
             {
